@@ -1,47 +1,53 @@
 import os
 import shutil
 from datetime import datetime
+from contacts import obtener_contactos
 
-ORIGEN = "/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media"
-DESTINO = os.path.expanduser("~/whatsapp-backup/data")
+ORIGEN="/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media"
+DESTINO=os.path.expanduser("~/whatsapp-backup/data")
 
-carpetas = {
-    "WhatsApp Images": "images",
-    "WhatsApp Video": "videos",
-    "WhatsApp Audio": "audios",
-    "WhatsApp Voice Notes": "audios",
-    "WhatsApp Animated Gifs": "gifs"
-}
+agenda = obtener_contactos()
 
-def organizar_archivo(origen):
-    nombre = os.path.basename(origen)
+def nombre_contacto(numero):
 
-    # ejemplo de nombre: IMG-20240301-WA0001.jpg
-    contacto = "desconocido"
+    for n in agenda:
+        if n in numero:
+            return agenda[n]
 
-    fecha = datetime.now().strftime("%Y-%m-%d")
+    return "desconocido"
 
-    carpeta_contacto = os.path.join(DESTINO, contacto, fecha)
+def guardar_archivo(ruta):
 
-    os.makedirs(carpeta_contacto, exist_ok=True)
+    numero="unknown"
 
-    destino = os.path.join(carpeta_contacto, nombre)
+    nombre=nombre_contacto(numero)
+
+    fecha=datetime.now().strftime("%Y-%m-%d")
+
+    carpeta=os.path.join(DESTINO,nombre,fecha)
+
+    os.makedirs(carpeta,exist_ok=True)
+
+    archivo=os.path.basename(ruta)
+
+    destino=os.path.join(carpeta,archivo)
 
     if not os.path.exists(destino):
-        shutil.copy2(origen, destino)
 
-for carpeta in carpetas:
+        shutil.copy2(ruta,destino)
 
-    ruta = os.path.join(ORIGEN, carpeta)
+for carpeta in os.listdir(ORIGEN):
 
-    if os.path.exists(ruta):
+    ruta=os.path.join(ORIGEN,carpeta)
 
-        for archivo in os.listdir(ruta):
+    if os.path.isdir(ruta):
 
-            archivo_completo = os.path.join(ruta, archivo)
+        for f in os.listdir(ruta):
 
-            if os.path.isfile(archivo_completo):
+            archivo=os.path.join(ruta,f)
 
-                organizar_archivo(archivo_completo)
+            if os.path.isfile(archivo):
 
-print("Backup terminado")
+                guardar_archivo(archivo)
+
+print("Backup organizado por contactos")
