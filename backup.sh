@@ -3,51 +3,50 @@ import shutil
 from datetime import datetime
 from contacts import obtener_contactos
 
-ORIGEN="/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media"
-DESTINO=os.path.expanduser("~/whatsapp-backup/data")
+# Carpeta origen de WhatsApp
+ORIGEN = "/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media"
 
+# Carpeta destino del backup
+DESTINO = os.path.expanduser("~/whatsapp-backup/data")
+
+# Carpetas de WhatsApp a respaldar
+carpetas = {
+    "WhatsApp Images": "images",
+    "WhatsApp Video": "videos",
+    "WhatsApp Audio": "audios",
+    "WhatsApp Voice Notes": "audios",
+    "WhatsApp Animated Gifs": "gifs"
+}
+
+# Cargar contactos con prefijos
 agenda = obtener_contactos()
 
-def nombre_contacto(numero):
-
+def obtener_nombre_contacto(numero):
+    """
+    Devuelve el nombre del contacto con prefijo si existe, sino "desconocido"
+    """
     for n in agenda:
-        if n in numero:
+        if n in numero or numero in n:
             return agenda[n]
+    return "🌐desconocido"
 
-    return "desconocido"
-
-def guardar_archivo(ruta):
-
-    numero="unknown"
-
-    nombre=nombre_contacto(numero)
-
-    fecha=datetime.now().strftime("%Y-%m-%d")
-
-    carpeta=os.path.join(DESTINO,nombre,fecha)
-
-    os.makedirs(carpeta,exist_ok=True)
-
-    archivo=os.path.basename(ruta)
-
-    destino=os.path.join(carpeta,archivo)
-
+def guardar_archivo(archivo, carpeta_destino):
+    numero = "unknown"  # Para detectar número real, se puede mejorar con metadata si existiera
+    nombre_contacto = obtener_nombre_contacto(numero)
+    fecha = datetime.now().strftime("%Y-%m-%d")
+    carpeta_contacto = os.path.join(carpeta_destino, nombre_contacto, fecha)
+    os.makedirs(carpeta_contacto, exist_ok=True)
+    destino = os.path.join(carpeta_contacto, os.path.basename(archivo))
     if not os.path.exists(destino):
+        shutil.copy2(archivo, destino)
 
-        shutil.copy2(ruta,destino)
-
-for carpeta in os.listdir(ORIGEN):
-
-    ruta=os.path.join(ORIGEN,carpeta)
-
-    if os.path.isdir(ruta):
-
+# Iterar sobre carpetas y archivos
+for c in carpetas:
+    ruta = os.path.join(ORIGEN, c)
+    if os.path.exists(ruta):
         for f in os.listdir(ruta):
-
-            archivo=os.path.join(ruta,f)
-
+            archivo = os.path.join(ruta, f)
             if os.path.isfile(archivo):
+                guardar_archivo(archivo, DESTINO)
 
-                guardar_archivo(archivo)
-
-print("Backup organizado por contactos")
+print("Backup organizado por contactos con prefijo terminado")
