@@ -1,23 +1,47 @@
-#!/bin/bash
+import os
+import shutil
+from datetime import datetime
 
-ORIGEN="/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media"
-DESTINO="$HOME/whatsapp-backup/data"
+ORIGEN = "/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media"
+DESTINO = os.path.expanduser("~/whatsapp-backup/data")
 
-mkdir -p "$DESTINO/images"
-mkdir -p "$DESTINO/videos"
-mkdir -p "$DESTINO/audios"
-mkdir -p "$DESTINO/gifs"
+carpetas = {
+    "WhatsApp Images": "images",
+    "WhatsApp Video": "videos",
+    "WhatsApp Audio": "audios",
+    "WhatsApp Voice Notes": "audios",
+    "WhatsApp Animated Gifs": "gifs"
+}
 
-cp -ru "$ORIGEN/WhatsApp Images/" "$DESTINO/images/"
-cp -ru "$ORIGEN/WhatsApp Video/" "$DESTINO/videos/"
-cp -ru "$ORIGEN/WhatsApp Audio/" "$DESTINO/audios/"
-cp -ru "$ORIGEN/WhatsApp Voice Notes/" "$DESTINO/audios/"
-cp -ru "$ORIGEN/WhatsApp Animated Gifs/" "$DESTINO/gifs/"
+def organizar_archivo(origen):
+    nombre = os.path.basename(origen)
 
-cd $HOME/whatsapp-backup
+    # ejemplo de nombre: IMG-20240301-WA0001.jpg
+    contacto = "desconocido"
 
-git add .
-git commit -m "Backup WhatsApp $(date)"
-git push origin main
+    fecha = datetime.now().strftime("%Y-%m-%d")
 
-echo "Backup enviado a GitHub"
+    carpeta_contacto = os.path.join(DESTINO, contacto, fecha)
+
+    os.makedirs(carpeta_contacto, exist_ok=True)
+
+    destino = os.path.join(carpeta_contacto, nombre)
+
+    if not os.path.exists(destino):
+        shutil.copy2(origen, destino)
+
+for carpeta in carpetas:
+
+    ruta = os.path.join(ORIGEN, carpeta)
+
+    if os.path.exists(ruta):
+
+        for archivo in os.listdir(ruta):
+
+            archivo_completo = os.path.join(ruta, archivo)
+
+            if os.path.isfile(archivo_completo):
+
+                organizar_archivo(archivo_completo)
+
+print("Backup terminado")
