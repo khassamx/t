@@ -3,9 +3,14 @@
 while true
 do
 
-bash backup.sh
+python backup.py
 
-echo "Esperando 5 minutos..."
-sleep 300
+cd ~/whatsapp-backup
+
+git add .
+git commit -m "backup $(date)"
+git push origin main
+
+sleep 60
 
 done
