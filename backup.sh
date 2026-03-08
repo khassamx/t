@@ -1,7 +1,8 @@
 import os
 import shutil
 from datetime import datetime
-from contacts import obtener_contactos
+import json
+import subprocess
 
 # Carpeta origen de WhatsApp
 ORIGEN = "/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media"
@@ -18,21 +19,48 @@ carpetas = {
     "WhatsApp Animated Gifs": "gifs"
 }
 
-# Cargar contactos con prefijos
+# Prefijos por país
+PREFIJOS = {
+    "+34": "🇪🇸",
+    "+595": "🇵🇾",
+    "+54": "🇦🇷",
+    "+1": "🇺🇸",
+    "+52": "🇲🇽",
+    "+44": "🇬🇧",
+}
+
+# Obtener contactos desde Termux
+def obtener_contactos():
+    try:
+        resultado = subprocess.check_output(["termux-contact-list"])
+        contactos = json.loads(resultado)
+    except:
+        return {}
+
+    agenda = {}
+    for c in contactos:
+        nombre = c.get("name","desconocido")
+        numeros = c.get("phoneNumbers",[])
+        for n in numeros:
+            numero = n["number"].replace(" ","").replace("-","")
+            prefijo = "🌐"
+            for code in PREFIJOS:
+                if numero.startswith(code):
+                    prefijo = PREFIJOS[code]
+                    break
+            agenda[numero] = f"{prefijo}{nombre}"
+    return agenda
+
 agenda = obtener_contactos()
 
 def obtener_nombre_contacto(numero):
-    """
-    Devuelve el nombre del contacto con prefijo si existe, sino "desconocido"
-    """
     for n in agenda:
         if n in numero or numero in n:
             return agenda[n]
     return "🌐desconocido"
 
 def guardar_archivo(archivo, carpeta_destino):
-    numero = "unknown"  # Para detectar número real, se puede mejorar con metadata si existiera
-    nombre_contacto = obtener_nombre_contacto(numero)
+    nombre_contacto = obtener_nombre_contacto("unknown")
     fecha = datetime.now().strftime("%Y-%m-%d")
     carpeta_contacto = os.path.join(carpeta_destino, nombre_contacto, fecha)
     os.makedirs(carpeta_contacto, exist_ok=True)
