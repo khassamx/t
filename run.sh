@@ -1,16 +1,14 @@
-#!/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash
 
-while true
-do
-
-python backup.py
-
+# Carpeta del proyecto
 cd ~/whatsapp-backup
 
+# Ejecutar Python backup
+python backup.py
+
+# Subir automáticamente a GitHub
 git add .
-git commit -m "backup $(date)"
+git commit -m "Backup automático $(date '+%Y-%m-%d %H:%M:%S')"
 git push origin main
 
-sleep 60
-
-done
+echo "Backup y GitHub completado con éxito"
