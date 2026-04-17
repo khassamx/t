@@ -1,0 +1,9 @@
+# Ignore storage directories
+storage/
+
+# Ignore Python cache
+__pycache__/
+*.py[cod]
+
+# Ignore environment files
+.env
