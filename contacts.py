@@ -1,41 +1,38 @@
-import json
-import subprocess
+class Contact:
+    def __init__(self, name, email, phone):
+        self.name = name
+        self.email = email
+        self.phone = phone
 
-# Mapa de prefijos por país (ejemplo)
-PREFIJOS = {
-    "+34": "🇪🇸",
-    "+595": "🇵🇾",
-    "+54": "🇦🇷",
-    "+1": "🇺🇸",
-    "+52": "🇲🇽",
-    "+44": "🇬🇧",
-    # agrega más prefijos según necesites
-}
+class ContactManager:
+    def __init__(self):
+        self.contacts = []
 
-def obtener_contactos():
-    """
-    Obtiene la lista de contactos desde Termux y devuelve un diccionario
-    con clave = número completo y valor = nombre con prefijo de país
-    """
-    try:
-        resultado = subprocess.check_output(["termux-contact-list"])
-        contactos = json.loads(resultado)
-    except Exception as e:
-        print("Error al obtener contactos:", e)
-        return {}
+    def add_contact(self, contact):
+        self.contacts.append(contact)
 
-    agenda = {}
+    def search_contact(self, name=None, email=None):
+        results = []
+        for contact in self.contacts:
+            if (name and name.lower() in contact.name.lower()) or 
+               (email and email.lower() in contact.email.lower()):
+                results.append(contact)
+        return results
 
-    for c in contactos:
-        nombre = c.get("name","desconocido")
-        numeros = c.get("phoneNumbers",[])
-        for n in numeros:
-            numero = n["number"].replace(" ","").replace("-","")
-            prefijo = "🌐"  # default si no se encuentra
-            for code in PREFIJOS:
-                if numero.startswith(code):
-                    prefijo = PREFIJOS[code]
-                    break
-            agenda[numero] = f"{prefijo}{nombre}"
+    def filter_contacts(self, criteria):
+        return [contact for contact in self.contacts if criteria(contact)]
 
-    return agenda
+    def export_contacts(self, filename):
+        with open(filename, 'w') as f:
+            for contact in self.contacts:
+                f.write(f'{contact.name},{contact.email},{contact.phone}\n')
+
+# Example Usage
+if __name__ == '__main__':
+    manager = ContactManager()
+    manager.add_contact(Contact('John Doe', 'john@example.com', '123-456-7890'))
+    manager.add_contact(Contact('Jane Smith', 'jane@example.com', '098-765-4321'))
+    search_results = manager.search_contact(name='Jane')
+    for contact in search_results:
+        print(contact.name, contact.email)
+    manager.export_contacts('contacts.csv')
